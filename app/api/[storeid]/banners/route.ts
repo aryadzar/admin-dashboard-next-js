@@ -36,7 +36,7 @@ export async function POST(
         if(!storeUserId){
             return new NextResponse("Unauthorized", {status: 403})
         }
-        const store = await db.banner.create({
+        const banner = await db.banner.create({
             data: {
                 label,
                 imageUrl,
@@ -44,7 +44,7 @@ export async function POST(
             }
         })
 
-        return NextResponse.json(store)
+        return NextResponse.json(banner)
     } catch (error) {
         console.log("[STORE_PATCH]", error);
         return new NextResponse("Internal Error", {status: 500})
@@ -52,6 +52,7 @@ export async function POST(
 }
 
 export async function GET(
+    req: Request,
     {params} : {params : {storeid: string}}
 ){
     try {
@@ -60,15 +61,15 @@ export async function GET(
             return new NextResponse("Store id Dibutuhkan", {status: 400})
         }
 
-        const store = await db.banner.findMany({
+        const banner = await db.banner.findMany({
             where: {
                 storeId: params.storeid
             }
         })
 
-        return NextResponse.json(store)
+        return NextResponse.json(banner)
     } catch (error) {
-        console.log("[BANNERS GET]", error);
+        console.log("[BANNERS_GET]", error);
         return new NextResponse("Internal Error", {status: 500})
     }
 }

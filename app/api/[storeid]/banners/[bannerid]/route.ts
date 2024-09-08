@@ -12,7 +12,7 @@ export async function GET(
             return new NextResponse("Store id Dibutuhkan", {status: 400})
         }
 
-        const banner = await db.banner.deleteMany({
+        const banner = await db.banner.findMany({
             where: {
                 id: params.bannerid            
             }
