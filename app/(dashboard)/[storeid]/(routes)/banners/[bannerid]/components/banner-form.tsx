@@ -5,11 +5,12 @@ import { ApiAlert } from "@/components/ui/api-alert"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Heading } from "@/components/ui/heading"
+import ImageUpload from "@/components/ui/image-upload"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { useOrigin } from "@/hooks/use-origin"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Store } from "@prisma/client"
+import { Banner } from "@prisma/client"
 import axios from "axios"
 import { Trash } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
@@ -18,11 +19,11 @@ import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
 import * as z from "zod"
 
-interface SettingsFormProps{
-    initialData: Store
+interface BannerFormProps{
+    initialData: Banner | null
 }
 
-export const SettingsForm : React.FC<SettingsFormProps> = ({
+export const BannerForm : React.FC<BannerFormProps> = ({
     initialData
 }) =>{
 
@@ -31,25 +32,39 @@ export const SettingsForm : React.FC<SettingsFormProps> = ({
     const origin = useOrigin()
 
     const formSchema = z.object({
-        name: z.string().min(1)
+        label: z.string().min(1),
+        imageUrl : z.string().min(1)
     })
 
     const [open,setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
-    type SettingFormValues = z.infer<typeof formSchema>
 
-    const form = useForm<SettingFormValues>({
+    const title = initialData ? "Edit Banner" : "Buat Banner"
+    const description = initialData ? "Edit Banner Toko" : "Buat Banner Toko"
+    const toastMessage = initialData ? "Banner Berhasil Diedit" : "Banner BErhasil Dibuat"
+    const action = initialData ? "Simpan" : "Buat Banner"
+    type BannerFormValues = z.infer<typeof formSchema>
+
+    const form = useForm<BannerFormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData
+        defaultValues: initialData || {
+            label : '',
+            imageUrl : ''
+        }
     })
 
 
-    const onSubmit = async (data: SettingFormValues) =>{
+    const onSubmit = async (data: BannerFormValues) =>{
         try {
             setLoading(true)
-            await axios.patch(`/api/stores/${params.storeid}`, data)
+            if(initialData){
+                await axios.patch(`/api/${params.storeid}/banners/${params.bannerid}`, data)
+            }else{
+                await axios.post(`/api/${params.storeid}/banners`, data)
+            }
             router.refresh()
-            toast.success("Toko Berhasil Diupdate")
+            router.push(`/${params.storeid}/banners`)
+            toast.success(toastMessage)
         } catch (error) {
             toast.error("Cek Kembali data yang diinput")
         }finally{
@@ -60,10 +75,10 @@ export const SettingsForm : React.FC<SettingsFormProps> = ({
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/stores/${params.storeid}`)
+            await axios.delete(`/api/${params.storeid}/banners/${params.bannerid}`)
             router.refresh()
             router.push('/')
-            toast.success("Toko Berhasil Dihapus")
+            toast.success("Banner Berhasil Dihapus")
         } catch (error) {
             toast.error('Cek kembali data dan koneksi mu')
         }finally {
@@ -83,17 +98,19 @@ export const SettingsForm : React.FC<SettingsFormProps> = ({
         />
             <div className="flex items-center justify-between">
                 <Heading
-                    title = "Settings"
-                    description = "Atur Toko"
+                    title = {title}
+                    description = {description}
                 />
-                <Button
-                disabled = {loading}
-                variant="destructive"
-                size="sm"
-                onClick={() => setOpen(true)}
-                >
-                    <Trash className="h-4 w-4"/>
-                </Button>
+                {initialData && (
+                    <Button
+                    disabled = {loading}
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setOpen(true)}
+                    >
+                        <Trash className="h-4 w-4"/>
+                    </Button>
+                )}
             </div>
             <Separator/>
             <Form {...form}>
@@ -101,13 +118,32 @@ export const SettingsForm : React.FC<SettingsFormProps> = ({
                     <div className="grid grid-cols-3 gap-8">
                         <FormField 
                         control={form.control}
-                        name="name"
+                        name="label"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel>Name</FormLabel>
+                                <FormLabel>Label</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Nama Toko" disabled={loading} {...field} />
+                                    <Input placeholder="label Banner" disabled={loading} {...field} />
                                 </FormControl>
+                                <FormMessage/>
+                            </FormItem>
+                        )}
+                        />
+                        <FormField 
+                        control={form.control}
+                        name="imageUrl"
+                        render={({field}) => (
+                            <FormItem>
+                                <FormLabel>Image</FormLabel>
+                                <FormControl>
+                                  <ImageUpload
+                                    disabled={loading}
+                                    onChange={(url) => field.onChange(url)}
+                                    onRemove={() => field.onChange("")}
+                                    value={field.value ? [field.value] : []}
+
+                                  />  
+                               </FormControl>
                                 <FormMessage/>
                             </FormItem>
                         )}
@@ -117,12 +153,11 @@ export const SettingsForm : React.FC<SettingsFormProps> = ({
                     disabled={loading}
                     type="submit"
                     >
-                        Save
+                        {action}
                     </Button>
                 </form>
             </Form>
             <Separator />
-            <ApiAlert title="PUBLIC_API_URL" description={`${origin}/api/${params.storeid}`} variant="public"/>
         </>
     )
 }

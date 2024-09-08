@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { ModalProvider } from "@/providers/modal-provider";
 import { ToasterProvider } from "@/providers/toast-provider";
 import { useEffect, useState } from "react";
@@ -29,12 +29,25 @@ export default function RootLayout({
 
   // if (!isMounted) return null; // Skip rendering until it's mounted
   return (
+    <ClerkProvider>
     <html lang="en">
-        <ClerkProvider>
         <ModalProvider/>
         <ToasterProvider/>
-        <body className={inter.className}>{children}</body>
-        </ClerkProvider>
+        <body className={inter.className}>
+        {/* <header>
+            <SignedOut>
+              <SignInButton />
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </header> */}
+          <main>
+            {children}
+
+          </main>
+        </body>
       </html>
+    </ClerkProvider>
   );
 }

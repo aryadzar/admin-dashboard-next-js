@@ -1,7 +1,7 @@
 "use client"
 
 import * as z from 'zod'
-import { useStoreModal } from "@/hooks/use-strole-modal";
+import { useStoreModal } from "@/hooks/use-store-modal";
 import Modal from "../ui/modal"
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
